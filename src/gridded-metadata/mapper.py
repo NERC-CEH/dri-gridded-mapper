@@ -84,6 +84,13 @@ def extract_attrs(dataset: Dataset | Variable, graph: Graph, ds_node: URIRef) ->
         if attr in dataset_attrs:
             apply_mapping(dataset, graph, ds_node, attr, mapping)
 
+def make_shape(graph: Graph, var_node: URIRef, shape: tuple[int, ...]) -> None:
+    shape_node = BNode()
+    shape_coll = Collection(graph, shape_node)
+    for s in shape:
+        shape_coll.append(Literal(s))
+    graph.add((var_node, FDRI.shape, shape_node))
+
 def extract_variables(dataset: Dataset, graph: Graph, base_url: str, ds_node: URIRef) -> None:
     for var_name, var in dataset.variables.items():
         var_node = URIRef(f"{base_url}#{var_name}")
@@ -93,7 +100,7 @@ def extract_variables(dataset: Dataset, graph: Graph, base_url: str, ds_node: UR
         extract_attrs(var, graph, var_node)
         if var.ndim == 1 and dataset.dimensions.get(var_name) is not None:
             graph.add((var_node, FDRI.isCoordinate, Literal(True)))
-            graph.add((var_node, FDRI.size, Literal(var.shape[0])))
+            make_shape(graph, var_node, var.shape)
         else:
             for dim in var.get_dims():
                 dim_node = URIRef(f"{base_url}#{dim.name}")
@@ -104,13 +111,7 @@ def extract_variables(dataset: Dataset, graph: Graph, base_url: str, ds_node: UR
                     dim_size = dataset.dimensions[dim.name].size
                     graph.add((dim_node, FDRI.size, Literal(dim_size)))
             if var.ndim > 1:
-                # Add a size collection for the dimension
-                size_node = BNode()
-                size_coll = Collection(graph, size_node)
-                for s in var.shape:
-                    size_coll.append(Literal(s))
-                graph.add((var_node, FDRI.size, size_node))
-                
+                make_shape(graph, var_node, var.shape)
 
 def run_main():
     import argparse
