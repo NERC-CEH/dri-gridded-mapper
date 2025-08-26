@@ -1,0 +1,11 @@
+.idea
+venv
+.venv
+__pycache__
+mapper.log
+*.egg-info
+.ruff_cache
+dist
+build
+.vscode
+*.nc
