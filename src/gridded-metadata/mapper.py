@@ -1,11 +1,13 @@
+import argparse
 import logging
 import os.path
 import pathlib
 import sys
-from netCDF4 import Dataset
-import netcdf
+
 import model
+import netcdf
 from fdri_mappings import ATTR_MAP
+from netCDF4 import Dataset
 
 
 def _extract_from_nc(file_path: str) -> model.Dataset:
@@ -14,8 +16,7 @@ def _extract_from_nc(file_path: str) -> model.Dataset:
     model = builder.build()
     return model
 
-def run_main():
-    import argparse
+def run_main() -> None:
     parser = argparse.ArgumentParser(description="Extract RDF from NetCDF files.")
     parser.add_argument("file", type=str, help="Path to the NetCDF file.")
     parser.add_argument("--base-url", type=str, help="Base URL for the dataset.", default=None)

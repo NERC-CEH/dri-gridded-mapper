@@ -1,5 +1,6 @@
-from model import Dataset, Dimension, Array
 import netCDF4 as nc
+from model import Array, Dataset, Dimension
+
 
 class Builder:
     def __init__(self, src: nc.Dataset):
@@ -25,8 +26,8 @@ class Builder:
         for attr in array.ncattrs():
             m.add_attr(attr, array.getncattr(attr))
         return m
-    
-    def resolve_references(self, var_name: str, array: nc.Variable):
+
+    def resolve_references(self, var_name: str, array: nc.Variable) -> None:
         m = self.dataset.arrays[var_name]
         for dim_name in array.dimensions:
             if dim_name in self.dataset.arrays:
