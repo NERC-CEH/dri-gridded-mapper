@@ -1,7 +1,8 @@
 import subprocess
 
 import netCDF4 as nc
-from model import Array, Dataset, Dimension
+
+from gridded_metadata.model import Array, Dataset, Dimension
 
 
 def cdl_to_ncd(cdl_file_path: str, ncd_file_path: str) -> int:
@@ -13,6 +14,8 @@ class Builder:
         self.dataset = Dataset()
 
     def build(self) -> Dataset:
+        for attr in self.src.ncattrs():
+            self.dataset.add_attr(attr, self.src.getncattr(attr))
         for dim_name, dim in self.src.dimensions.items():
             dim_model = self.build_dimension(dim_name, dim)
             self.dataset.add_dimension(dim_model)
@@ -27,7 +30,7 @@ class Builder:
         return m
 
     def build_array(self, name: str, array: nc.Variable) -> Array:
-        m = Array(name, array.shape)
+        m = Array(name, list(array.shape))
         for attr in array.ncattrs():
             m.add_attr(attr, array.getncattr(attr))
         return m

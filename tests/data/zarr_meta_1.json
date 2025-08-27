@@ -1,0 +1,44 @@
+{
+    "metadata": {
+        ".zattrs": {
+            "title": "Test ZARR dataset"
+        },
+        "time/.zarray": {
+          "shape": [300]   
+        },
+        "time/.zattrs": {
+            "units": "days since 2000-01-01",
+            "long_name": "Time"
+        },
+        "lat/.zarray": {
+          "shape": [180]
+        },
+        "lat/.zattrs": {
+            "units": "degrees_north",
+            "long_name": "Latitude"
+        },
+        "lon/.zarray": {
+          "shape": [360]
+        },
+        "lon/.zattrs": {
+            "units": "degrees_east",
+            "long_name": "Longitude"
+        },
+        "tas/.zarray": {
+            "shape": [
+                21549,
+                1057,
+                656
+            ]
+        },
+        "tas/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "long_name": "Near-surface air temperature",
+            "units": "K"
+        }
+    }
+}

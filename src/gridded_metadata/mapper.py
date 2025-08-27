@@ -1,101 +1,99 @@
-import argparse
-import json
-import logging
-import os.path
-import pathlib
-import sys
-import tempfile
 
-import model
-import model.netcdf as netcdf
-import model.zarr as zarr_model
-from fdri_mappings import ATTR_MAP
-from netCDF4 import Dataset
+from rdflib import BNode, Graph, Literal, URIRef
+from rdflib.collection import Collection
+from rdflib.namespace import FOAF, RDF, RDFS, SDO, Namespace
 
+from gridded_metadata.model import Array, Dataset, Dimension, WithAttrs
 
-def extract_model(file_type: str, file_path: str) -> model.Dataset:
-    if file_type == 'nc':
-        return _extract_from_nc(file_path)
-    if file_type == 'cdl':
-        tfile, tfilepath = tempfile.mkstemp('.nc')
-        netcdf.cdl_to_ncd(file_path, tfilepath)
-        dataset_model = _extract_from_nc(tfilepath)
-        os.close(tfile)
-        os.remove(tfilepath)
-        return dataset_model
-    if file_type == 'zarr':
-        raise RuntimeError("ZARR file support is not yet implemented")
-    if file_type == 'zarr-meta':
-        return _extract_from_zarr_meta(file_path)
-    raise ValueError(f"Unknown file type: {file_type}")
+FDRI = Namespace("http://fdri.ceh.ac.uk/vocab/metadata/")
 
-def _extract_from_nc(file_path: str) -> model.Dataset:
-    dataset = Dataset(file_path)
-    builder = netcdf.Builder(dataset)
-    model = builder.build()
-    return model
+class GraphBuilder:
+    def __init__(self, dataset: Dataset, base_uri: str, mappings: dict, g: Graph):
+        self.dataset = dataset
+        self.base_uri = base_uri
+        self.mappings = mappings
+        self.g = g
 
-def _extract_from_zarr_meta(file_path: str) -> model.Dataset:
-    with open(file_path, "r") as f:
-        metadata = json.load(f)
-    builder = zarr_model.Builder(metadata)
-    model = builder.build()
-    return model
+    def build_graph(self) -> URIRef:
+        ds_node = URIRef(f"{self.base_uri}")
+        # Create properties for dataset attributes
+        self.map_attrs(self.dataset, ds_node)
+        self.map_dimensions(self.dataset, ds_node)
+        self.map_arrays(self.dataset, ds_node)
+        return ds_node
 
-def guess_file_type(file_path: str) -> str:
-    ext = os.path.splitext(file_path)[1].lower()
-    if (ext in ['.cdl', '.ncml']):
-        return 'cdl'
-    if (ext in ['.zarr', '.zip']):
-        return 'zarr'
-    if (ext in ['.json']):
-        return 'zarr-meta'
-    return 'nc'
+    def map_attrs(self, element: WithAttrs, element_node: URIRef) -> None:
+        for key, value in element.attrs.items():
+            if key not in self.mappings:
+                continue
+            mapping = self.mappings[key]
+            self.apply_mapping(mapping, element, value, element_node)
 
-def run_main() -> None:
-    parser = argparse.ArgumentParser(description="Extract RDF from NetCDF files.")
-    parser.add_argument("file", type=str, help="Path to the NetCDF/CDL/ZARR file.")
-    parser.add_argument("--type",
-                        type=str,
-                        help="Type of the file. nc: NetCDF, cdl: NetCDF CDL, zarr: ZARR, zarr-meta: ZARR Metadata JSON," \
-                        " auto: Guess from file extension.",
-                        default="auto",
-                        choices=["nc", "cdl", "zarr", "zarr-meta", "auto"])
-    parser.add_argument("--base-url", type=str, help="Base URL for the dataset.", default=None)
-    parser.add_argument("--output", type=str, help="Path to the output RDF file.", default=None)
-    args = parser.parse_args()
+    def apply_mapping(self, mapping: dict, element: WithAttrs, value: str, element_node: URIRef) -> None:
+        if mapping['type'] == 'literal':
+            predicate = mapping['predicate']
+            self.g.add((element_node, predicate, Literal(value)))
+        elif mapping['type'] == 'agent':
+            predicate = mapping['predicate']
+            name = element.attrs.get(mapping['name'])
+            email = element.attrs.get(mapping['email'])
+            agent_node = BNode()
+            self.g.add((element_node, predicate, agent_node))
+            self.g.add((agent_node, RDF.type, FDRI.Agent))
+            if name:
+                self.g.add((agent_node, RDFS.label, Literal(name)))
+            if email:
+                self.g.add((agent_node, FOAF.mbox, Literal(email)))
+        elif mapping['type'] == 'annotation':
+            property_uri = mapping['property']
+            annotation_node = BNode()
+            self.g.add((annotation_node, RDF.type, FDRI.Annotation))
+            self.g.add((annotation_node, FDRI.property, property_uri))
+            value_node = BNode()
+            self.g.add((annotation_node, FDRI.hasValue, value_node))
+            self.g.add((value_node, RDF.type, SDO.PropertyValue))
+            self.g.add((value_node, SDO.value, Literal(value)))
+            self.g.add((element_node, FDRI.hasAnnotation, annotation_node))
 
-    _init_logging()
-    file_type = args.type.lower()
-    if file_type == 'auto':
-        file_type = guess_file_type(args.file)
-    dataset_model = extract_model(file_type, args.file)
-    logging.info(f"Built model with {len(dataset_model.dimensions)} dimensions and {len(dataset_model.arrays)} arrays")
-    base_url = args.base_url or pathlib.Path(os.path.abspath(args.file)).as_uri()
-    g = model.build_graph(dataset_model, base_url, ATTR_MAP)
-    logging.info(f"Extracted {len(g)} RDF triples. Dataset node identifier is {base_url}")
+    def map_dimensions(self, dataset: Dataset, ds_node: URIRef) -> None:
+        for dim in dataset.dimensions.values():
+            dim_node = self.node_for(dim)
+            self.g.add((ds_node, FDRI.contains, dim_node))
+            self.g.add((dim_node, RDF.type, FDRI.Dimension))
+            self.g.add((dim_node, RDFS.label, Literal(dim.name)))
+            self.g.add((dim_node, FDRI.size, Literal(dim.size)))
 
-    if args.output:
-        with open(args.output, "wb") as f:
-            g.serialize(f, format="turtle")
-    else:
-        print(g.serialize(format="turtle"))
+    def node_for(self, element: WithAttrs) -> URIRef:
+        if isinstance(element, Dataset):
+            return URIRef(f"{self.base_uri}")
+        if isinstance(element, Dimension):
+            return URIRef(f"{self.base_uri}#dimension-{element.name}")
+        if isinstance(element, Array):
+            return URIRef(f"{self.base_uri}#{element.name}")
+        raise ValueError(f"Unknown element type: {type(element)}")
 
-def _init_logging() -> None:
-    logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
+    def map_arrays(self, dataset: Dataset, ds_node: URIRef) -> None:
+        for array in dataset.arrays.values():
+            array_node = self.node_for(array)
+            self.g.add((ds_node, FDRI.contains, array_node))
+            self.g.add((array_node, RDF.type, FDRI.Array))
+            self.g.add((array_node, RDFS.label, Literal(array.name)))
+            self.g.add((array_node, FDRI.shape, self.make_shape(array.dimensions)))
+            for reference in array.references:
+                ref_node = self.node_for(reference)
+                self.g.add((array_node, FDRI.references, ref_node))
+            self.map_attrs(array, array_node)
 
-    formatter = logging.Formatter("%(asctime)s %(levelname)s: %(message)s")
-    h1 = logging.FileHandler("mapper.log")
-    h1.setFormatter(formatter)
-    h1.setLevel(logging.INFO)
-    h2 = logging.StreamHandler(sys.stderr)
-    h2.setFormatter(formatter)
-    h2.addFilter(lambda record: record.levelno >= logging.ERROR)
-    h2.setLevel(logging.ERROR)
+    def make_shape(self, shape: list[int]) -> BNode:
+        shape_node = BNode()
+        collection = Collection(self.g, shape_node)
+        for dim in shape:
+            collection.append(Literal(dim))
+        return shape_node
 
-    logger.addHandler(h1)
-    logger.addHandler(h2)
-
-if __name__ == "__main__":
-    run_main()
+def build_graph(dataset: Dataset, base_uri: str, mappings: dict) -> Graph:
+    g = Graph()
+    g.namespace_manager.bind("fdri", FDRI)
+    builder = GraphBuilder(dataset, base_uri, mappings, g)
+    builder.build_graph()
+    return g

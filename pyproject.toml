@@ -31,7 +31,7 @@ where = ["src"]
 include = ["gridded-metadata*"]
 
 [project.scripts]
-mapper = "src.gridded_metadata.mapper:run_main"
+gridded-mapper = "gridded_metadata.main:run_main"
 
 [tool.pytest.ini_options]
 addopts = ""
