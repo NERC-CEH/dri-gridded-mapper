@@ -7,7 +7,7 @@ ATTR_MAP = {
     "title": { 'type': 'literal', 'predicate': DCTERMS.title },
     "summary": { 'type': 'literal', 'predicate': DCTERMS.description },
     "standard_name": { 'type': 'literal', 'predicate': DCTERMS.identifier },
-    "long_name": { 'type': 'literal', 'predicate': RDFS.comment },
+    "long_name": { 'type': 'literal', 'predicate': DCTERMS.title },
     "comment": { 'type': 'literal', 'predicate': RDFS.comment },
     "EPSG_code": {
         'type': 'annotation',

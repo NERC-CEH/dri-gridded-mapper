@@ -10,7 +10,8 @@ dependencies = [
     "pyright[nodejs]",
     "pydantic-settings",
     "netCDF4",
-    "rdflib"
+    "rdflib",
+    "zarr",
 ]
 name = "gridded-metadata"
 version = "0.1.0"
@@ -30,7 +31,7 @@ where = ["src"]
 include = ["gridded-metadata*"]
 
 [project.scripts]
-mapper = "gridded-metadata.mapper:run_main"
+mapper = "src.gridded_metadata.mapper:run_main"
 
 [tool.pytest.ini_options]
 addopts = ""

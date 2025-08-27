@@ -1,6 +1,11 @@
+import subprocess
+
 import netCDF4 as nc
 from model import Array, Dataset, Dimension
 
+
+def cdl_to_ncd(cdl_file_path: str, ncd_file_path: str) -> int:
+    return subprocess.check_call(['ncgen', '-o', ncd_file_path, cdl_file_path])
 
 class Builder:
     def __init__(self, src: nc.Dataset):
