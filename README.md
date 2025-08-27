@@ -18,6 +18,9 @@ Output is always generated as Turtle and will be written to the standard output 
 
 The URI identifier of the dataset resource in the generated RDF will be the full path of the input file converted to a file:// URL *unless* the `--base` option is provided. If `--base` is provided, that value is used for the URI identifier of the dataset resource.
 
+## Documentation
+
+See [docs](./doc/index.md)
 ## Dev Setup
 
 Requires Python 3.12 or greater.
