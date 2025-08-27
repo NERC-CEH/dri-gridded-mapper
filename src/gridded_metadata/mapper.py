@@ -1,11 +1,42 @@
 
+import json
+
 from rdflib import BNode, Graph, Literal, URIRef
 from rdflib.collection import Collection
-from rdflib.namespace import FOAF, RDF, RDFS, SDO, Namespace
+from rdflib.namespace import FOAF, RDF, RDFS, SDO, Namespace, NamespaceManager
 
 from gridded_metadata.model import Array, Dataset, Dimension, WithAttrs
 
 FDRI = Namespace("http://fdri.ceh.ac.uk/vocab/metadata/")
+
+def _expand_uri(uri_or_curie: str, ns_mgr: NamespaceManager) -> URIRef:
+    if isinstance(uri_or_curie, URIRef):
+        return uri_or_curie
+    if uri_or_curie.startswith("http://") or uri_or_curie.startswith("https://"):
+        return URIRef(uri_or_curie)
+    return ns_mgr.expand_curie(uri_or_curie)
+
+def _expand_mapping(mapping: dict, ns_mgr: NamespaceManager) -> dict:
+    ret = mapping.copy()
+    if 'predicate' in mapping:
+        ret['predicate'] = _expand_uri(mapping['predicate'], ns_mgr)
+    if 'property' in mapping:
+        ret['property'] = _expand_uri(mapping['property'], ns_mgr)
+    return ret
+
+def read_mappings(file_path: str) -> dict:
+    with open(file_path, "r") as f:
+        config = json.load(f)
+    g = Graph()
+    ns_mgr = NamespaceManager(g)
+    for prefix, uri in config.get("namespaces", {}).items():
+        ns_mgr.bind(prefix, Namespace(uri))
+    ret = {}
+    src_mappings = config.get("mappings", {})
+    for mapping_key, mapping_value in src_mappings.items():
+        ret[mapping_key] = _expand_mapping(mapping_value, ns_mgr)
+    return ret
+
 
 class GraphBuilder:
     def __init__(self, dataset: Dataset, base_uri: str, mappings: dict, g: Graph):

@@ -1,0 +1,22 @@
+{
+    "namespaces": {
+        "fdri": "http://fdri.ceh.ac.uk/vocab/metadata/",
+        "dct": "http://purl.org/dc/terms/"
+    },
+    "mappings": {
+        "title": {
+            "predicate": "fdri:title",
+            "type": "literal"
+        },
+        "creator": {
+            "predicate": "dct:creator",
+            "type": "agent",
+            "name": "creator_name",
+            "email": "creator_email"
+        },
+        "annotation": {
+            "type": "annotation",
+            "property": "http://fdri.ceh.ac.uk/ref/common/cop/some-property"
+        }
+    }
+}

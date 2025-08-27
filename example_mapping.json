@@ -1,0 +1,38 @@
+{
+    "namespaces": {
+        "dcterms": "http://purl.org/dc/terms/",
+        "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+    },
+    "mappings": {
+        "title": {
+            "type": "literal",
+            "predicate": "dcterms:title"
+        },
+        "summary": {
+            "type": "literal",
+            "predicate": "dcterms:description"
+        },
+        "standard_name": {
+            "type": "literal",
+            "predicate": "dcterms:identifier"
+        },
+        "long_name": {
+            "type": "literal",
+            "predicate": "dcterms:title"
+        },
+        "comment": {
+            "type": "literal",
+            "predicate": "rdfs:comment"
+        },
+        "EPSG_code": {
+            "type": "annotation",
+            "property": "http://fdri.ceh.ac.uk/ref/common/cop/epsg-code"
+        },
+        "creator_name": {
+            "type": "agent",
+            "predicate": "dcterms:creator",
+            "name": "creator_name",
+            "email": "creator_email"
+        }
+    }
+}
