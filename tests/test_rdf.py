@@ -1,11 +1,29 @@
 
 from rdflib import SDO, Literal, URIRef
 from rdflib.collection import Collection
-from rdflib.namespace import DCTERMS, FOAF, RDF, RDFS
+from rdflib.namespace import DCTERMS, FOAF, Namespace, RDF, RDFS
 
 from gridded_metadata import mapper, model
-from gridded_metadata.fdri_mappings import ATTR_MAP, FDRI
 
+FDRI = Namespace("http://fdri.ceh.ac.uk/vocab/metadata/")
+
+ATTR_MAP = {
+    "title": { 'type': 'literal', 'predicate': DCTERMS.title },
+    "summary": { 'type': 'literal', 'predicate': DCTERMS.description },
+    "standard_name": { 'type': 'literal', 'predicate': DCTERMS.identifier },
+    "long_name": { 'type': 'literal', 'predicate': DCTERMS.title },
+    "comment": { 'type': 'literal', 'predicate': RDFS.comment },
+    "EPSG_code": {
+        'type': 'annotation',
+        'property': URIRef('http://fdri.ceh.ac.uk/ref/common/cop/epsg-code')
+    },
+    "creator_name": {
+        'type': 'agent',
+        'predicate': DCTERMS.creator,
+        'name': 'creator_name',
+        'email': 'creator_email'
+    }
+}
 
 def test_literal_attributes() -> None:
     ds = model.Dataset()

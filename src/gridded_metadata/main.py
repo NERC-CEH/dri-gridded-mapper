@@ -12,7 +12,6 @@ import gridded_metadata.mapper as mapper
 import gridded_metadata.model as model
 import gridded_metadata.model.netcdf as netcdf
 import gridded_metadata.model.zarr as zarr_model
-from gridded_metadata.fdri_mappings import ATTR_MAP
 
 
 def extract_model(file_type: str, file_path: str) -> model.Dataset:
@@ -56,6 +55,7 @@ def guess_file_type(file_path: str) -> str:
 
 def run_main() -> None:
     parser = argparse.ArgumentParser(description="Extract RDF from NetCDF files.")
+    parser.add_argument("map", type=str, help="Path to the JSON mapping file.")
     parser.add_argument("file", type=str, help="Path to the NetCDF/CDL/ZARR file.")
     parser.add_argument("--type",
                         type=str,
@@ -71,10 +71,13 @@ def run_main() -> None:
     file_type = args.type.lower()
     if file_type == 'auto':
         file_type = guess_file_type(args.file)
+
+    mapping = mapper.read_mappings(args.map)
+
     dataset_model = extract_model(file_type, args.file)
     logging.info(f"Built model with {len(dataset_model.dimensions)} dimensions and {len(dataset_model.arrays)} arrays")
     base_url = args.base_url or pathlib.Path(os.path.abspath(args.file)).as_uri()
-    g = mapper.build_graph(dataset_model, base_url, ATTR_MAP)
+    g = mapper.build_graph(dataset_model, base_url, mapping)
     logging.info(f"Extracted {len(g)} RDF triples. Dataset node identifier is {base_url}")
 
     if args.output:
