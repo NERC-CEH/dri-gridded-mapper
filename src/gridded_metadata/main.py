@@ -5,8 +5,12 @@ import os.path
 import pathlib
 import sys
 import tempfile
+from io import StringIO
 
+import yaml
 from netCDF4 import Dataset
+from rdf_mapper.lib.template_processor import TemplateProcessor
+from rdf_mapper.lib.template_state import MapperSpec
 
 import gridded_metadata.mapper as mapper
 import gridded_metadata.model as model
@@ -72,12 +76,20 @@ def run_main() -> None:
     if file_type == 'auto':
         file_type = guess_file_type(args.file)
 
-    mapping = mapper.read_mappings(args.map)
+    with open(args.map, "r") as f:
+        if args.map.endswith('.json'):
+            spec_dict = json.load(f)
+        else:
+            spec_dict = yaml.safe_load(f)
+    spec = MapperSpec(spec_dict)
+    spec.auto_declare = False
+    buf = StringIO()
+    template_processor = TemplateProcessor(spec, args.file, buf)
 
     dataset_model = extract_model(file_type, args.file)
     logging.info(f"Built model with {len(dataset_model.dimensions)} dimensions and {len(dataset_model.arrays)} arrays")
     base_url = args.base_url or pathlib.Path(os.path.abspath(args.file)).as_uri()
-    g = mapper.build_graph(dataset_model, base_url, mapping)
+    g = mapper.build_graph(dataset_model, base_url, template_processor)
     logging.info(f"Extracted {len(g)} RDF triples. Dataset node identifier is {base_url}")
 
     if args.output:

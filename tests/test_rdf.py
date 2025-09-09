@@ -1,35 +1,80 @@
 
+from io import StringIO
+
+from rdf_mapper.lib.mapper_spec import MapperSpec
+from rdf_mapper.lib.template_processor import TemplateProcessor
 from rdflib import SDO, Literal, URIRef
 from rdflib.collection import Collection
-from rdflib.namespace import DCTERMS, FOAF, Namespace, RDF, RDFS
+from rdflib.namespace import DCTERMS, FOAF, RDF, RDFS, Namespace
 
 from gridded_metadata import mapper, model
 
 FDRI = Namespace("http://fdri.ceh.ac.uk/vocab/metadata/")
 
 ATTR_MAP = {
-    "title": { 'type': 'literal', 'predicate': DCTERMS.title },
-    "summary": { 'type': 'literal', 'predicate': DCTERMS.description },
-    "standard_name": { 'type': 'literal', 'predicate': DCTERMS.identifier },
-    "long_name": { 'type': 'literal', 'predicate': DCTERMS.title },
-    "comment": { 'type': 'literal', 'predicate': RDFS.comment },
-    "EPSG_code": {
-        'type': 'annotation',
-        'property': URIRef('http://fdri.ceh.ac.uk/ref/common/cop/epsg-code')
-    },
-    "creator_name": {
-        'type': 'agent',
-        'predicate': DCTERMS.creator,
-        'name': 'creator_name',
-        'email': 'creator_email'
-    }
+    "resources": [
+        {
+            "name": "LiteralMappings",
+            "properties": {
+                "@id": "<{$resource}>",
+                f"<{DCTERMS.title}>": "{title}",
+                f"<{DCTERMS.description}>": "{summary}",
+                f"<{DCTERMS.identifier}>": "{standard_name}",
+            }
+        },
+        {
+            "name": "Creator",
+            "requires": {
+                "creator_name": None,
+            },
+            "properties": {
+                "@id": "<{$base}#creator>",
+                "@type": "<http://xmlns.com/foaf/0.1/Agent>",
+                f"<{RDFS.label}>": "{creator_name}",
+                f"<{FOAF.mbox}>": "{creator_email}",
+                f"^<{DCTERMS.creator}>": "<{$resource}>",
+            }
+        },
+        {
+            "name": "DatasetEPSG",
+            "requires": {
+                "EPSG_code": None,
+            },
+            "properties": {
+                "@id": "<{$base}>",
+                f"<{FDRI.hasAnnotation}>": [
+                    {
+                        "name": "EPSGAnnotation",
+                        "properties": {
+                            "@id": "<{$base}#annotation-EPSG>",
+                            "@type": "<http://fdri.ceh.ac.uk/vocab/metadata/Annotation>",
+                            f"<{FDRI.property}>": "<http://fdri.ceh.ac.uk/ref/common/cop/epsg-code>",
+                            f"<{FDRI.hasValue}>": [
+                                {
+                                    "name": "EPSGAnnotationValue",
+                                    "properties": {
+                                        "@id": "<{$base}#annotation-EPSG-value>",
+                                        "@type": f"<{SDO.PropertyValue}>",
+                                        f"<{SDO.value}>": "{EPSG_code}",
+                                    }
+                                }
+                            ],
+                        }
+                    }
+                ],
+            }
+        }
+    ],
 }
 
 def test_literal_attributes() -> None:
     ds = model.Dataset()
     ds.add_attr("title", "Test Dataset")
     ds.add_attr("summary", "A dataset for testing")
-    g = mapper.build_graph(ds, "http://example.com/dataset", ATTR_MAP)
+    template_processor = TemplateProcessor(
+        MapperSpec(spec=ATTR_MAP), 'test', StringIO()
+    )
+    g = mapper.build_graph(ds, "http://example.com/dataset", template_processor)
     ds = URIRef("http://example.com/dataset")
     assert (ds, DCTERMS.title, Literal("Test Dataset")) in g
     assert (ds, DCTERMS.description, Literal("A dataset for testing")) in g
@@ -38,7 +83,10 @@ def test_agent_attribute() -> None:
     ds = model.Dataset()
     ds.add_attr("creator_name", "Jane Doe")
     ds.add_attr("creator_email", "jane.doe@example.com")
-    g = mapper.build_graph(ds, "http://example.com/dataset", ATTR_MAP)
+    template_processor = TemplateProcessor(
+        MapperSpec(spec=ATTR_MAP), 'test', StringIO()
+    )
+    g = mapper.build_graph(ds, "http://example.com/dataset", template_processor)
     ds = URIRef("http://example.com/dataset")
     matches = list(g.triples((ds, DCTERMS.creator, None)))
     assert len(matches) == 1
@@ -50,7 +98,10 @@ def test_agent_attribute() -> None:
 def test_annotation_mapping() -> None:
     ds = model.Dataset()
     ds.add_attr("EPSG_code", "EPSG:4326")
-    g = mapper.build_graph(ds, "http://example.com/dataset", ATTR_MAP)
+    template_processor = TemplateProcessor(
+        MapperSpec(spec=ATTR_MAP), 'test', StringIO()
+    )
+    g = mapper.build_graph(ds, "http://example.com/dataset", template_processor)
     ds = URIRef("http://example.com/dataset")
     annotation_triples = list(g.triples((ds, FDRI.hasAnnotation, None)))
     assert len(annotation_triples) == 1
@@ -67,7 +118,10 @@ def test_dimension_mapping() -> None:
     ds = model.Dataset()
     dim = model.Dimension(name="time", size=10)
     ds.add_dimension(dim)
-    g = mapper.build_graph(ds, "http://example.com/dataset", ATTR_MAP)
+    template_processor = TemplateProcessor(
+        MapperSpec(spec=ATTR_MAP), 'test', StringIO()
+    )
+    g = mapper.build_graph(ds, "http://example.com/dataset", template_processor)
     ds_node = URIRef("http://example.com/dataset")
     dim_node = URIRef("http://example.com/dataset#dimension-time")
     assert (ds_node, FDRI.contains, dim_node) in g
@@ -81,7 +135,10 @@ def test_array_mapping() -> None:
     array.add_attr("standard_name", "latitude")
     array.add_reference(dim)
     ds.add_array(array)
-    g = mapper.build_graph(ds, "http://example.com/dataset", ATTR_MAP)
+    template_processor = TemplateProcessor(
+        MapperSpec(spec=ATTR_MAP), 'test', StringIO()
+    )
+    g = mapper.build_graph(ds, "http://example.com/dataset", template_processor)
     ds_node = URIRef("http://example.com/dataset")
     array_node = URIRef("http://example.com/dataset#lat")
     assert (ds_node, FDRI.contains, array_node) in g
