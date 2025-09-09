@@ -18,7 +18,7 @@ class GraphBuilder:
 
     def build_graph(self) -> URIRef:
         ds_node = URIRef(f"{self.base_uri}")
-        self.store.add((ds_node, RDF.type, FDRI.Container))
+        self.store.add((ds_node, RDF.type, FDRI.GriddedContainer))
         # Create properties for dataset attributes
         self.map_attrs(self.dataset, ds_node)
         self.map_dimensions(self.dataset, ds_node)
