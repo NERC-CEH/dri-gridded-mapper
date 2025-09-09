@@ -92,6 +92,7 @@ def test_agent_attribute() -> None:
     assert len(matches) == 1
     agent = matches[0][2]
     assert (ds, DCTERMS.creator, agent) in g
+    assert (ds, RDF.type, FDRI.GriddedContainer) in g
     assert (agent, RDFS.label, Literal("Jane Doe")) in g
     assert (agent, FOAF.mbox, Literal("jane.doe@example.com")) in g
 
