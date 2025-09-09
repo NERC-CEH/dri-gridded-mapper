@@ -1,0 +1,60 @@
+resources:
+  - name: BoundingBox
+    requires:
+      geospatial_lat_min:
+      geospatial_lat_max:
+      geospatial_lon_min:
+      geospatial_lon_max:
+    properties:
+      "@id": <{$resource}#bbox>
+      "<http://www.opengis.net/ont/geosparql#asWKT>": "POLYGON(({geospatial_lon_min} {geospatial_lat_min}, {geospatial_lon_max} {geospatial_lat_min}, {geospatial_lon_max} {geospatial_lat_max}, {geospatial_lon_min} {geospatial_lat_max}, {geospatial_lon_min} {geospatial_lat_min}))"
+
+  - name: Creator
+    requires:
+      creator_name:
+    properties:
+      "@id": <http://fdri.ceh.ac.uk/id/agent/{creator_name|hash}>
+      "<http://xmlns.com/foaf/0.1/name>": "{creator_name}@en"
+      "<http://xmlns.com/foaf/0.1/mbox>": "{creator_email}"
+      "<http://xmlns.com/foaf/0.1/homepage>": "{creator_url}"
+  
+  - name: TemporalCoverage
+    requires:
+      time_coverage_start:
+      time_coverage_end:
+    properties:
+      "@id": <{$resource}#temporal>
+      "@type": "<http://fdri.ceh.ac.uk/vocab/metadata/PeriodOfTime>"
+      "<dcat:startDate>": "{time_coverage_start|asDateTime}"
+      "<dcat:endDate>": "{time_coverage_end|asDateTime}"
+
+  - name: DatasetMetadata
+    requires:
+      $type: Dataset
+    properties:
+      "@id": <{$resource}>
+      "<dct:title>": "{title}@en"
+      "<dct:description>": "{summary}@en"
+      "<dcat:spatialResolution>": "{spatial_resolution_distance|asDecimal}"
+      "<geos:hasBoundingBox>": <::BoundingBox>
+      "<dct:creator>": <::Creator>
+      "<dct:created>": "{date_created|asDateTime}"
+      "<dct:temporal>": <::TemporalCoverage>
+      "<dct:temporalResolution>": "{time_coverage_resolution}^^<xsd:duration>"
+
+  - name: ArrayMetadata
+    requires:
+      $type: Array
+    properties:
+      "@id": <{$resource}>
+      "<dct:title>": "{standard_name}@en"
+      "<dct:description>": "{long_name}@en"
+  
+
+  # Pulls up a property from the grid mapping variable to the dataset level
+  - name: DatasetEPSG
+    requires:
+      EPSG_code:
+    properties:
+      "@id": <{$base}>
+      "<http://www.opengis.net/ont/geosparql#hasSRS>": "urn:ogc:def:crs:EPSG::{EPSG_code}"
