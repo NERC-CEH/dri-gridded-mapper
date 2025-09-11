@@ -14,7 +14,7 @@ dependencies = [
     "zarr",
     "rdf-mapper@git+https://github.com/epimorphics/rdf-mapper"
 ]
-name = "gridded-metadata"
+name = "gridded_metadata"
 version = "0.1.0"
 description = "Simple metadata extractor for gridded datasets"
 authors = [
@@ -25,11 +25,11 @@ authors = [
 test = ["pytest"]
 docs = ["sphinx", "sphinx-rtd-theme"]
 lint = ["ruff"]
-dev = ["gridded-metadata[test,docs,lint]"]
+dev = ["gridded_metadata[test,docs,lint]"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["gridded-metadata*"]
+include = ["gridded_metadata*"]
 
 [project.scripts]
 gridded-mapper = "gridded_metadata.main:run_main"
