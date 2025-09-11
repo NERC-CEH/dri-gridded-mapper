@@ -1,3 +1,4 @@
+import logging
 
 from rdf_mapper.lib.template_processor import TemplateProcessor
 from rdflib import BNode, Graph, Literal, URIRef
@@ -30,6 +31,7 @@ class GraphBuilder:
         values['$base'] = self.base_uri
         values['$resource'] = element_node
         values['$type'] = type(element).__name__
+        logging.info(f"Mapping attributes for {element_node} with {values}")
         self.template_processor.process_row(values)
 
     def map_dimensions(self, dataset: Dataset, ds_node: URIRef) -> None:
