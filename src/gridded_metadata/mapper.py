@@ -1,7 +1,7 @@
 import logging
 
 from rdf_mapper.lib.template_processor import TemplateProcessor
-from rdflib import BNode, Graph, Literal, URIRef
+from rdflib import SDO, BNode, Graph, Literal, URIRef
 from rdflib.collection import Collection
 from rdflib.namespace import RDF, RDFS, Namespace
 
@@ -59,9 +59,14 @@ class GraphBuilder:
             self.store.add((array_node, RDFS.label, Literal(array.name)))
             if len(array.dimensions):
                 self.store.add((array_node, FDRI.shape, self.make_shape(array.dimensions)))
-            for reference in array.references:
+            for ix in range(len(array.references)):
+                reference = array.references[ix]
                 ref_node = self.node_for(reference)
-                self.store.add((array_node, FDRI.references, ref_node))
+                item_node = BNode()
+                self.store.add((array_node, FDRI.referenceList, item_node))
+                self.store.add((item_node, RDF.type, FDRI.GriddedArrayItem))
+                self.store.add((item_node, FDRI['index'], Literal(ix)))
+                self.store.add((item_node, SDO.valueReference, ref_node))
             self.map_attrs(array, array_node)
 
     def make_shape(self, shape: list[int]) -> BNode:

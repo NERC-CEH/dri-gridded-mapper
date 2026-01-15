@@ -152,4 +152,8 @@ def test_array_mapping() -> None:
     assert len(collection) == 1
     assert collection[0] == Literal(180)
     dim_node = URIRef("http://example.com/dataset#dimension-lat")
-    assert (array_node, FDRI.references, dim_node) in g
+    ref_list_tripes = list(g.triples((array_node, FDRI.referenceList, None)))
+    assert len(ref_list_tripes) == 1
+    ref_list_node = ref_list_tripes[0][2]
+    assert (ref_list_node, SDO.valueReference, dim_node) in g
+    assert (ref_list_node, FDRI['index'], Literal(0)) in g

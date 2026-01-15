@@ -15,7 +15,7 @@ dependencies = [
     "rdf-mapper@git+https://github.com/epimorphics/rdf-mapper"
 ]
 name = "gridded_metadata"
-version = "0.1.0"
+version = "0.2.0"
 description = "Simple metadata extractor for gridded datasets"
 authors = [
     { name = "Kal Ahmed", email = "kal.ahmed@epimorphics.com" },
