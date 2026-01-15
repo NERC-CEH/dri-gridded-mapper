@@ -5,7 +5,7 @@ from rdf_mapper.lib.mapper_spec import MapperSpec
 from rdf_mapper.lib.template_processor import TemplateProcessor
 from rdflib import Literal, URIRef
 from rdflib.collection import Collection
-from rdflib.namespace import DCTERMS, FOAF, RDF, RDFS, Namespace
+from rdflib.namespace import DCTERMS, FOAF, RDF, RDFS, XSD, Namespace
 
 from gridded_metadata import mapper, model
 
@@ -157,4 +157,4 @@ def test_array_mapping() -> None:
     assert len(ref_list_tripes) == 1
     ref_list_node = ref_list_tripes[0][2]
     assert (ref_list_node, SDO.valueReference, dim_node) in g
-    assert (ref_list_node, FDRI['index'], Literal(0)) in g
+    assert (ref_list_node, FDRI['index'], Literal(0, datatype=XSD.nonNegativeInteger)) in g

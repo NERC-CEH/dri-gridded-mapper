@@ -3,7 +3,7 @@ import logging
 from rdf_mapper.lib.template_processor import TemplateProcessor
 from rdflib import BNode, Graph, Literal, URIRef
 from rdflib.collection import Collection
-from rdflib.namespace import RDF, RDFS, Namespace
+from rdflib.namespace import RDF, RDFS, XSD, Namespace
 
 from gridded_metadata.model import Array, Dataset, Dimension, WithAttrs
 
@@ -66,7 +66,7 @@ class GraphBuilder:
                 item_node = BNode()
                 self.store.add((array_node, FDRI.referenceList, item_node))
                 self.store.add((item_node, RDF.type, FDRI.GriddedArrayItem))
-                self.store.add((item_node, FDRI['index'], Literal(ix)))
+                self.store.add((item_node, FDRI['index'], Literal(ix, datatype=XSD.nonNegativeInteger)))
                 self.store.add((item_node, SDO.valueReference, ref_node))
             self.map_attrs(array, array_node)
 
