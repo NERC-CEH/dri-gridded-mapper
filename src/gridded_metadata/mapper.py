@@ -1,13 +1,14 @@
 import logging
 
 from rdf_mapper.lib.template_processor import TemplateProcessor
-from rdflib import SDO, BNode, Graph, Literal, URIRef
+from rdflib import BNode, Graph, Literal, URIRef
 from rdflib.collection import Collection
 from rdflib.namespace import RDF, RDFS, Namespace
 
 from gridded_metadata.model import Array, Dataset, Dimension, WithAttrs
 
 FDRI = Namespace("http://fdri.ceh.ac.uk/vocab/metadata/")
+SDO = Namespace("http://schema.org/")
 
 class GraphBuilder:
     def __init__(self, dataset: Dataset, base_uri: str, template_processor: TemplateProcessor):
