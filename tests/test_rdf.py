@@ -3,13 +3,14 @@ from io import StringIO
 
 from rdf_mapper.lib.mapper_spec import MapperSpec
 from rdf_mapper.lib.template_processor import TemplateProcessor
-from rdflib import SDO, Literal, URIRef
+from rdflib import Literal, URIRef
 from rdflib.collection import Collection
 from rdflib.namespace import DCTERMS, FOAF, RDF, RDFS, Namespace
 
 from gridded_metadata import mapper, model
 
 FDRI = Namespace("http://fdri.ceh.ac.uk/vocab/metadata/")
+SDO = Namespace("http://schema.org/")
 
 ATTR_MAP = {
     "resources": [
