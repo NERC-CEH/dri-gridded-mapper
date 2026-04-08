@@ -12,7 +12,7 @@ dependencies = [
     "netCDF4",
     "rdflib",
     "zarr",
-    "rdf-mapper@git+https://github.com/epimorphics/rdf-mapper"
+    "rdf-mapper@git+https://github.com/epimorphics/rdf-mapper@v0.2.5"
 ]
 name = "gridded_metadata"
 version = "0.2.0"
