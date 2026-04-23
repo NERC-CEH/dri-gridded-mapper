@@ -2,7 +2,7 @@
 
 ## Usage
 
-```
+```sh
 gridded-mapper [--type {nc,cdl,zarr,zarr-meta,auto}] [--output OUTPUT] [--base BASE_URL] map file
 ```
 
@@ -25,13 +25,14 @@ The URI identifier of the dataset resource in the generated RDF will be the full
 ## Documentation
 
 See [docs](./doc/index.md)
+
 ## Dev Setup
 
 Requires Python 3.12 or greater.
 
 Create venv and install dependencies:
 
-```
+```sh
 python3 -m venv .venv
 . .venv/bin/activate
 pip install .[dev]
@@ -39,12 +40,13 @@ pip install -e .
 ```
 
 Linting:
-```
+
+```sh
 ruff check [--fix]
 ```
 
 Testing:
 
-```
+```sh
 pytest
 ```
