@@ -9,8 +9,8 @@ from io import StringIO
 
 import yaml
 from netCDF4 import Dataset
+from rdf_mapper.lib.mapper_spec import MapperModel, MapperSpec
 from rdf_mapper.lib.template_processor import TemplateProcessor
-from rdf_mapper.lib.template_state import MapperSpec
 
 import gridded_metadata.mapper as mapper
 import gridded_metadata.model as model
@@ -81,7 +81,7 @@ def run_main() -> None:
             spec_dict = json.load(f)
         else:
             spec_dict = yaml.safe_load(f)
-    spec = MapperSpec(spec_dict)
+    spec = MapperSpec(MapperModel.model_validate(spec_dict))
     spec.auto_declare = False
     buf = StringIO()
     template_processor = TemplateProcessor(spec, args.file, buf)
