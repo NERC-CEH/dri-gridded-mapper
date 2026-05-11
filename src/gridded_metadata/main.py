@@ -69,6 +69,9 @@ def run_main() -> None:
                         choices=["nc", "cdl", "zarr", "zarr-meta", "auto"])
     parser.add_argument("--base-url", type=str, help="Base URL for the dataset.", default=None)
     parser.add_argument("--output", type=str, help="Path to the output RDF file.", default=None)
+    parser.add_argument('-g', '--set-global', action='append', type=str,
+                        metavar="KEY=VALUE",
+                        help='Set a global variable for use in the template.')
     args = parser.parse_args()
 
     _init_logging()
@@ -82,6 +85,14 @@ def run_main() -> None:
         else:
             spec_dict = yaml.safe_load(f)
     spec = MapperSpec(MapperModel.model_validate(spec_dict))
+
+    if args.set_global:
+        d = {}
+        for item in args.set_global:
+            key, value = item.split("=", 1)
+            d[key] = value
+        spec.add_context(d)
+
     spec.auto_declare = False
     buf = StringIO()
     template_processor = TemplateProcessor(spec, args.file, buf)
